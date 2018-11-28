@@ -134,6 +134,7 @@ The next model: Exclude price per square foot, and bedrooms/bathrooms (since the
 
 # b. Model summary:
 
+#See "saturated" above. 
 ```
 
 Wait...but what if I wanted everything to be with respect to a Regular sale status? Then I need to change my factor levels. We've done this before, here we'll use a different function (fct_relevel) from *forcats* package in the tidyverse. 
@@ -141,12 +142,13 @@ Wait...but what if I wanted everything to be with respect to a Regular sale stat
 ```{r fct_relevel}
 
 # a. Set Status to class 'factor'
-
+homes_sub$Status <- factor(homes_sub$Status)
 
 # b. Check to ensure it's a factor now
-
+# Use Levels(homes_sub$status)
 
 # c. Check levels:
+#fct_relevel() function in forcasts
 
 
 # d. Reassign reference level of "Status" to "Regular":
@@ -154,7 +156,8 @@ Wait...but what if I wanted everything to be with respect to a Regular sale stat
 
 # e. Now run the regression again - same equation, but now the reference level is different (Status = Regular): 
 
-
+homes_sub$Status <- fct_relevel(homes_sub$Status, "Regular")
+homes_lm3 <- lm(Price ~ City + SqFt + Status, data=homes_sub) 
 
 ```
 
@@ -170,7 +173,7 @@ Then we can evaluate model diagnostics using the plot() function:
 ```{r diagnostics}
 
 # a. Model diagnostics:
-
+plot(homes_lm3)
 ```
 
 ###6. Model comparison by Akaike Information Criterion
@@ -180,9 +183,12 @@ The AIC is a quantitative metric for model "optimization" that balances complexi
 ```{r AIC}
 
 # a. AIC values for each model
+full_aic <- AIC(homes_lm1)
+final_aic <- AIC(homes_lm3)
+#only valuable when you are comparing multiple models
 
 # Answer: which would you pick? 
-
+# while the first looks preferable, it does not accurately represent the trends in real life. 
 ```
 
 ###7. Regression tables with *stargazer*
@@ -191,7 +197,7 @@ The AIC is a quantitative metric for model "optimization" that balances complexi
 
 # a. Prepare a nice regression table:
 
-
+stargazer(homes_lm1, homes_lm2, homes_lm3, type = "html")
 
 # Note: If you want to work with this in Word, save to html, open, copy and paste into Word. 
 
@@ -242,10 +248,13 @@ Make predictions for the new data using predict():
 ```{r predict}
 
 # a. Make predictions using the new data frame:
+price_predict <- predict(homes_lm3, newdata = df_new, se.fit = TRUE, interval ="confidence")
+View(price_predict)
 
 # b. Bind predictions to the data to make it actually useful:
 
-
+predict_df <- data.frame(df_new, price_predict)
+View(predict_df)
 
 ```
 
@@ -255,7 +264,13 @@ Then visualize it!
 
 # Create a line graph with square footage on the x-axis, predicted price on y-axis, with color dependent on City and facet_wrapped by sale status (follow along):
 
+predict_graph <- ggplot(predict_df, aes(x= SqFt, y = fit.fit))+
+  geom_line(aes(color= City))+
+  geom_point(data = homes_sub, aes(x= SqFt, y= Price), alpha= 0.1)+ #adds data from a different dataframe
+  facet_wrap(~Status)
 
+predict_graph
+  
 ```
 
 END LAB
