@@ -41,10 +41,12 @@ library(stargazer)
 ```{r get_data, include = FALSE}
 
 # a. Read in data as 'homes':
-
+homes <-read_csv("slo_homes.csv")
 
 # b. Filter to only include cities "San Luis Obispo", "Santa Maria-Orcutt", "Atascadero", and "Arroyo Grande", and call this new subset 'homes_sub':
 
+homes_sub <- homes %>%
+  filter(City =="San Luis Obispo"|City =="Santa Maria-Orcutt"| City=="Atascadero"| City=="Arroyo Grande")
 
 
 ```
@@ -89,6 +91,8 @@ by_sqft
 
 # Observations here: Does relationship appear ~ linear? Anything else we can pick out re: trends, outliers, etc.? What is the general trend? Any outliers? Is there reason enough for us to omit it?
 
+#Useful for interpreting multiple variables. 
+
 ```
 
 ###4. Multiple linear regression
@@ -108,9 +112,18 @@ Use summary() to view the model output and statistics.
 
 # a. Saturated model: 
 
+homes_lm1 <- lm(formula = Price ~ City + Bedrooms+ Bathrooms + PricePerSqFt + Status, data = homes_sub)
+summary(homes_lm1) #summary() shows the model with summary statistics
+
+#price per sq ft is calculated from total price of each home...so there is already a direct relationship; if you include this variable, it will improve the model fit (perhaps not in a good way) because it's skewed. 
+
+homes_lm2 <- lm(formula = Price ~ City + SqFt + Status, data = homes_sub)
 
 # b. Model summary:
+summary(homes_lm2)
 
+#multiple r sq: one predictor, one outcome. model fit will not go up with more variables
+#adjusted r sq: model fit will go up with multiple variables. 
 ```
 
 The next model: Exclude price per square foot, and bedrooms/bathrooms (since these are largely explained by square footage...)
